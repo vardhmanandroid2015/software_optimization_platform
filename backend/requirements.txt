@@ -1,0 +1,29 @@
+# FastAPI and web server
+fastapi
+uvicorn[standard]
+pydantic
+
+# CORS support
+python-multipart
+
+# System monitoring
+psutil
+
+# Async support
+aiofiles
+
+# Optional: Docker/Kubernetes integration
+docker
+kubernetes
+
+# Optional: Database drivers
+asyncpg  # PostgreSQL
+aiomysql # MySQL
+motor    # MongoDB
+
+# Optional: Redis for caching
+redis
+aioredis
+
+# Optional: Monitoring & metrics
+prometheus-client

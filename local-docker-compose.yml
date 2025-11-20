@@ -1,0 +1,78 @@
+services:
+  # The PostgreSQL Database Service
+  db:
+    image: postgres:17-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: codeoptimizer
+      POSTGRES_PASSWORD: codeoptimizer123
+      POSTGRES_DB: codeoptimizer
+    volumes:
+      - aws_postgres_data:/var/lib/postgresql/data
+      - ./backend/app/sql/00_db_setup.sql:/docker-entrypoint-initdb.d/00_db_setup.sql
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codeoptimizer -d codeoptimizer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      
+  # Your FastAPI Backend Service
+  backend:
+    build: ./backend
+    container_name: fastapi_backend
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: codeoptimizer
+      POSTGRES_PASSWORD: codeoptimizer123
+      POSTGRES_DB_NAME: codeoptimizer
+      POSTGRES_PORT: 5432
+      MOCK_API_BASE_URL: "http://backend:8000"
+      GEMINI_API_KEY: "AIzaSyDqNHcOKAbLfC9DZQFt6aObsaikKv0Mukg"  
+    depends_on:
+      - db
+    # --- CHANGE: NO LONGER NEED TO EXPOSE PORT TO HOST ---
+    # The frontend container will talk to this one directly.
+    # We remove the `ports` section from the backend.
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/v1/analytics/init-ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+
+  # --- NEW: The React Frontend Service (with Nginx) ---
+  frontend:
+    build: ./frontend
+    container_name: react_frontend
+    ports:
+      # Map port 3000 on your Windows machine to port 80 inside the container (where Nginx is listening).
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+# Define the network and volume
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  aws_postgres_data:
+    driver: local
