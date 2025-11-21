@@ -2,6 +2,14 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
+python-multipart
+python-dotenv
+pydantic[email]
+
+# Database
+sqlalchemy
+psycopg2-binary
 
 # CORS support
 python-multipart
@@ -27,3 +35,8 @@ aioredis
 
 # Optional: Monitoring & metrics
 prometheus-client
+
+# User Authentication & Encrypt JWT
+python-jose[cryptography]
+passlib==1.7.4
+bcrypt<4.0
